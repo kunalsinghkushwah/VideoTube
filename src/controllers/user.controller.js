@@ -102,6 +102,7 @@ const loginUser = asyncHandler(async (req, res) => {
     // send cookie
 
     const { email, password, username } = req.body
+    // console.log(email)
 
     if(!username && !email) {
         throw new ApiError(400, "username or password is required")
