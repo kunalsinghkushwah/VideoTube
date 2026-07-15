@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 
 const generateAccessAndRefreshTokens = async(userId) => {
@@ -151,8 +152,8 @@ const logoutUser = asyncHandler(async(req, res) => {
     User.findByIdAndUpdate(
         req.user._id,
         {
-            $set: {
-                refreshToken: undefined
+            $unset: {
+                refreshToken: 1
             }
         },
         {
@@ -172,7 +173,7 @@ const logoutUser = asyncHandler(async(req, res) => {
     .json(new ApiResponse(200, {}, "user logged out"))
 })
 
-const refreshAccessToken = asyncHandler(async(req, res) => {
+const refreshAccessToken = asyncHandler(async (req, res) => {
     const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
 
 
@@ -300,13 +301,13 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
 const updateUserCoverImage = asyncHandler(async(req, res) => {
     const coverImageLocalPath = req.file?.path 
 
-    if(!coverIamgeLocalPath) {
+    if(!coverImageLocalPath) {
         throw new ApiError(400, "Avatar file is missing")
     }
 
-    const coverImage = await uploadOnCloudinary(coverIamgeLocalPath)
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
-    if(!coverIamge) {
+    if(!coverImage) {
         throw new ApiError(400, "Error while uploading coverImage")
     }
 
@@ -314,7 +315,7 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
         req.user._id,
         {
             $set: {
-                coverIamge: coverIamge.url
+                coverImage: coverImage.url
             }
         },
         {new: true}
@@ -357,7 +358,7 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
             }
         },
         {
-            $addFeilds: {
+            $addFields: {
                 subscribersCount: {
                     $size: "$subscribers"
                 },
@@ -415,7 +416,7 @@ const getWatchHistory = asyncHandler(async(req, res) => {
                     {
                         $lookup: {
                             from:"users",
-                            localFeild:"owner",
+                            localField:"owner",
                             foreignField: "_id",
                             as: "owner",
                             pipeline: [
